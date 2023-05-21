@@ -16,7 +16,9 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut file_voltage = File::open("/sys/class/power_supply/BAT1/voltage_now")?;
     let mut file_current = File::open("/sys/class/power_supply/BAT1/current_now")?;
 
-    let mut wtr = Writer::from_path("output.csv")?;
+    let path = format!("{}.csv", args[1]);
+
+    let mut wtr = Writer::from_path(path)?;
 
     let mut voltage = String::new();
     let mut current = String::new();
