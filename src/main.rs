@@ -27,16 +27,19 @@ fn main() -> Result<(), Box<dyn Error>> {
 
         file_voltage.read_to_string(&mut voltage)?;
 
-        let voltage = voltage.trim().parse::<f64>()? / 1_000_000.0;
+        let voltage_f64 = voltage.trim().parse::<f64>()? / 1_000_000.0;
 
         file_current.read_to_string(&mut current)?;
 
-        let current = current.trim().parse::<f64>()? / 1_000_000.0;
+        let current_f64 = current.trim().parse::<f64>()? / 1_000_000.0;
 
-        let wattage = voltage * current;
+        let wattage = voltage_f64 * current_f64;
 
         wtr.write_record(&[&count.to_string(), &args[1], &wattage.to_string()])?;
         wtr.flush()?;
+
+        voltage = String::new();
+        current = String::new();
 
         thread::sleep(time::Duration::from_secs(1));
     }
