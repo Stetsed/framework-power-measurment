@@ -8,8 +8,8 @@ use std::{thread, time};
 fn main() -> Result<(), Box<dyn Error>> {
     let args: Vec<String> = env::args().collect();
 
-    if args.len() < 2 {
-        println!("Please provide a name for the run.");
+    if args.len() < 3 {
+        println!("Please provide a name for the run, and the task in the format ./(program) (settings) (task).");
         return Ok(());
     }
 
@@ -37,7 +37,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
         let wattage = voltage_f64 * current_f64;
 
-        wtr.write_record(&[&count.to_string(), &args[1], &wattage.to_string()])?;
+        wtr.write_record(&[&count.to_string(), &args[1], &args[2], &wattage.to_string()])?;
         wtr.flush()?;
 
         voltage = String::new();
