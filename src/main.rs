@@ -50,7 +50,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut voltage = String::new();
     let mut current = String::new();
 
-    for count in 0..10 {
+    for count in 0..600 {
         file_voltage.seek(SeekFrom::Start(0))?;
         file_current.seek(SeekFrom::Start(0))?;
 
