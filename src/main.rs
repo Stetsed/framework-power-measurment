@@ -1,6 +1,9 @@
 use csv::Writer;
+use plotters::prelude::*;
+use plotters::style::IntoFont;
 use std::env;
 use std::error::Error;
+use std::fs;
 use std::fs::File;
 use std::io::{Read, Seek, SeekFrom};
 use std::{thread, time};
@@ -13,17 +16,41 @@ fn main() -> Result<(), Box<dyn Error>> {
         return Ok(());
     }
 
-    let mut file_voltage = File::open("/sys/class/power_supply/BAT1/voltage_now")?;
-    let mut file_current = File::open("/sys/class/power_supply/BAT1/current_now")?;
+    let battery_dir = "/sys/class/power_supply";
 
-    let path = format!("{}-{}.csv", args[1], args[2]);
+    let mut battery: String = String::new();
 
-    let mut wtr = Writer::from_path(path)?;
+    match fs::read_dir(battery_dir) {
+        Ok(entries) => {
+            for entry in entries {
+                if let Ok(entry) = entry {
+                    let file_name = entry.file_name();
+                    let batterys = file_name.to_string_lossy().to_string();
+                    if batterys.contains("BAT") {
+                        battery = batterys;
+                        break;
+                    }
+                }
+            }
+        }
+        Err(err) => {
+            eprintln!("Failed to read directory {}: {}", battery_dir, err);
+        }
+    }
+
+    let mut file_voltage = File::open(format!("/sys/class/power_supply/{}/voltage_now", &battery))?;
+    let mut file_current = File::open(format!("/sys/class/power_supply/{}/current_now", &battery))?;
+
+    let path = format!("{}-{}.csv", &args[1], &args[2]);
+
+    let mut wtr = Writer::from_path(&path)?;
+
+    wtr.write_record(&["Time", "Settings", "Task", "Wattage"])?;
 
     let mut voltage = String::new();
     let mut current = String::new();
 
-    for count in 0..600 {
+    for count in 0..10 {
         file_voltage.seek(SeekFrom::Start(0))?;
         file_current.seek(SeekFrom::Start(0))?;
 
@@ -46,5 +73,50 @@ fn main() -> Result<(), Box<dyn Error>> {
         thread::sleep(time::Duration::from_secs(1));
     }
 
+    // Parse the CSV data
+    let mut rdr = csv::Reader::from_path(&path)?;
+
+    let mut data: Vec<(f64, f64)> = Vec::new();
+    for result in rdr.deserialize() {
+        let record: (f64, String, String, f64) = result?;
+        data.push((record.0, record.3));
+    }
+
+    let chart_path: String = format!("{}-{}.png", &args[1], &args[2]);
+
+    // Setup chart
+    let root = plotters::prelude::BitMapBackend::new(&chart_path, (640, 480)).into_drawing_area();
+    root.fill(&WHITE)?;
+
+    let max_wattage = data
+        .iter()
+        .map(|(_, wattage)| wattage)
+        .cloned()
+        .fold(f64::NAN, f64::max);
+    let max_time = data
+        .iter()
+        .map(|(time, _)| time)
+        .cloned()
+        .fold(f64::NAN, f64::max);
+
+    let mut chart = ChartBuilder::on(&root)
+        .caption("Wattage over time", ("sans-serif", 40).into_font())
+        .margin(10)
+        .x_label_area_size(30)
+        .y_label_area_size(30)
+        .build_cartesian_2d(0f64..max_time, 0f64..max_wattage)?;
+
+    chart.configure_mesh().draw()?;
+
+    chart
+        .draw_series(LineSeries::new(data, &BLUE))?
+        .label("Wattage")
+        .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &BLUE));
+
+    chart
+        .configure_series_labels()
+        .background_style(&WHITE.mix(0.8))
+        .border_style(&BLACK)
+        .draw()?;
     Ok(())
 }
