@@ -12,7 +12,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let args: Vec<String> = env::args().collect();
 
     if args.len() < 3 {
-        println!("Please provide a name for the run, and the task in the format ./(program) (settings) (task).");
+        println!("Please provide a name for the run, and the task and the amount of time to run for in seconds ./(program) (settings) (task) (time).");
         return Ok(());
     }
 
@@ -45,12 +45,14 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let mut wtr = Writer::from_path(&path)?;
 
+    let time: i64 = args[3].parse()?;
+
     wtr.write_record(&["Time", "Settings", "Task", "Wattage"])?;
 
     let mut voltage = String::new();
     let mut current = String::new();
 
-    for count in 0..600 {
+    for count in 0..time {
         file_voltage.seek(SeekFrom::Start(0))?;
         file_current.seek(SeekFrom::Start(0))?;
 
