@@ -2,6 +2,8 @@
 
 This tool is made to measure power on linux for the Framework laptop 13, it will probally work on others although I have not tested, as long as your laptop's battery starts with BAT in /sys/class/power_supply/ it will be found.
 
+It outputs the recorded data to a .csv file and it will plot the data to a graph .png.
+
 
 ## Build & Run
 ```bash
