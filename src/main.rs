@@ -1,14 +1,10 @@
 use crossterm::{execute, terminal::EnterAlternateScreen};
 use csv::Writer;
-use plotters::prelude::*;
-use plotters::style::{BLACK, BLUE, WHITE};
 use rand::{distributions::Alphanumeric, Rng};
-use serde::Deserialize;
 use std::env;
+use std::fs;
 use std::fs::File;
-use std::fs::{self, DirBuilder};
-use std::io::{stdout, Result, Write};
-use std::io::{Read, Seek, SeekFrom};
+use std::io::{stdout, Read, Result, Seek, SeekFrom, Write};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use std::{thread, time};
 
