@@ -8,3 +8,8 @@ edition = "2021"
 [dependencies]
 csv = "1.1.6"
 plotters = "0.3.3"
+crossterm = "0.23"
+rand = "*"
+tokio = { version = "1", features = ["full"] }
+serde = "*"
+anyhow = "*"
