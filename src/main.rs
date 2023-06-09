@@ -12,11 +12,7 @@ use std::{thread, time};
 async fn main() -> Result<()> {
     let args: Vec<String> = env::args().collect();
 
-    if &args.len() < &6 {
-        help()?;
-    };
-
-    if &args[1].as_str() == &"help" {
+    if &args.len() < &6 || &args[1].as_str() == &"help" {
         help()?;
     };
 
@@ -39,7 +35,7 @@ async fn main() -> Result<()> {
         _ => tokio::spawn(async move { Ok(()) }),
     };
 
-    measure(args.clone(), &time_until).await;
+    measure(args.clone(), &time_until);
 
     Ok(())
 }
@@ -139,7 +135,7 @@ fn terminal_spam(time_until: &u64) -> Result<()> {
     Ok(())
 }
 
-async fn measure(args: Vec<String>, time_until: &u64) -> anyhow::Result<()> {
+fn measure(args: Vec<String>, time_until: &u64) -> anyhow::Result<()> {
     let battery_dir = "/sys/class/power_supply";
 
     let mut battery: String = String::new();
