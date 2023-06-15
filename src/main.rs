@@ -8,6 +8,11 @@ use std::io::{stdout, Read, Result, Seek, SeekFrom, Write};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use std::{thread, time};
 
+#[derive(Debug)]
+struct Measurement {
+    wattage: Vec<f64>,
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
     let args: Vec<String> = env::args().collect();
@@ -35,7 +40,24 @@ async fn main() -> Result<()> {
         _ => tokio::spawn(async move { Ok(()) }),
     };
 
-    measure(args.clone(), &time_until);
+    let measurements: Measurement = measure(args.clone(), &time_until).unwrap();
+
+    let average = measurements
+        .wattage
+        .iter()
+        .sum::<f64>()
+        .div_euclid(measurements.wattage.len() as f64);
+
+    let duration = time::SystemTime::now()
+        .duration_since(time::UNIX_EPOCH)
+        .expect("Time went backwards")
+        .as_secs()
+        - now;
+
+    println!(
+        "Run Time: {}s, Mode: {}, Threads: {}, Average Wattage: {}w, Saved To: ./measure/{}.csv",
+        duration, args[1], args[2], average, args[4]
+    );
 
     Ok(())
 }
@@ -135,7 +157,7 @@ fn terminal_spam(time_until: &u64) -> Result<()> {
     Ok(())
 }
 
-fn measure(args: Vec<String>, time_until: &u64) -> anyhow::Result<()> {
+fn measure(args: Vec<String>, time_until: &u64) -> Result<Measurement> {
     let battery_dir = "/sys/class/power_supply";
 
     let mut battery: String = String::new();
@@ -173,6 +195,8 @@ fn measure(args: Vec<String>, time_until: &u64) -> anyhow::Result<()> {
 
     let settings = format!("{}-{}", &args[1], &args[2]);
 
+    let mut measurment: Vec<f64> = Vec::new();
+
     let mut count = 0;
     while time_until
         > &SystemTime::now()
@@ -201,6 +225,8 @@ fn measure(args: Vec<String>, time_until: &u64) -> anyhow::Result<()> {
         ])?;
         wtr.flush()?;
 
+        measurment.push(wattage);
+
         voltage = String::new();
         current = String::new();
 
@@ -208,5 +234,10 @@ fn measure(args: Vec<String>, time_until: &u64) -> anyhow::Result<()> {
 
         thread::sleep(time::Duration::from_secs(1));
     }
-    Ok(())
+
+    let result: Measurement = Measurement {
+        wattage: measurment,
+    };
+
+    return Ok(result);
 }
