@@ -13,8 +13,7 @@ struct Measurement {
     wattage: Vec<f64>,
 }
 
-#[tokio::main]
-async fn main() -> Result<()> {
+fn main() -> Result<()> {
     let args: Vec<String> = env::args().collect();
 
     if &args.len() < &6 || &args[1].as_str() == &"help" {
@@ -35,9 +34,9 @@ async fn main() -> Result<()> {
     let args2 = args.clone();
 
     match args[1].as_str() {
-        "stress" => tokio::spawn(async move { stress_thread(&args2, &time_until) }),
-        "terminal" => tokio::spawn(async move { terminal_spam(&time_until) }),
-        _ => tokio::spawn(async move { Ok(()) }),
+        "stress" => thread::spawn(move || stress_thread(args2.clone(), time_until.clone())),
+        "terminal" => thread::spawn(move || terminal_spam(time_until.clone())),
+        _ => thread::spawn(|| Ok(())),
     };
 
     let measurements: Measurement = measure(args.clone(), &time_until).unwrap();
@@ -71,7 +70,7 @@ fn help() -> Result<()> {
     std::process::exit(0);
 }
 
-fn stress_thread(args: &Vec<String>, time_until: &u64) -> Result<()> {
+fn stress_thread(args: Vec<String>, time_until: u64) -> Result<()> {
     let threads = &args[2];
 
     let thread_amount = threads
@@ -79,7 +78,7 @@ fn stress_thread(args: &Vec<String>, time_until: &u64) -> Result<()> {
         .parse::<i64>()
         .expect("Couldn't parse threads to i64");
     while time_until
-        > &SystemTime::now()
+        > SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .expect("Failed to get time for Stress Threads")
             .as_secs()
@@ -111,7 +110,7 @@ fn stress_thread(args: &Vec<String>, time_until: &u64) -> Result<()> {
 
     Ok(())
 }
-fn terminal_spam(time_until: &u64) -> Result<()> {
+fn terminal_spam(time_until: u64) -> Result<()> {
     let mut rng = rand::thread_rng();
 
     // Enter alternate screen buffer
@@ -119,7 +118,7 @@ fn terminal_spam(time_until: &u64) -> Result<()> {
 
     // Loop indefinitely
     while time_until
-        > &SystemTime::now()
+        > SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .expect("Failed to get time for Stress Threads")
             .as_secs()
