@@ -1,7 +1,11 @@
 #!/bin/bash
 
-cat ./measure/* >> summary.csv
+cat ./measure/* >>summary_pre.csv
 
-sed -i 's/Time,Settings,Info,Wattage//g' summary.csv
+sed -i 's/Time,Settings,Info,Wattage//g' summary_pre.csv
 
-sed -i '1s/^/Time,Settings,Info,Wattage\n/' summary.csv
+echo "Time,Settings,Info,Wattage" >summary.csv
+
+cat summary_pre.csv >>summary.csv
+
+rm summary_pre.csv
