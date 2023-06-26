@@ -28,4 +28,4 @@ After you have your final .csv you can import it into "https://app.rawgraphs.io/
 
 ## License
 
-Unlicense, do whatever the hell you want. Although if you want a feature open a issue and I'll probally implement it.
+MIT License
